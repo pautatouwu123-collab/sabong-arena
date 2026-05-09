@@ -1201,5 +1201,21 @@ if __name__ == '__main__':
     with app.app_context():
         init_db()
     
+    # Serve static HTML files
+    @app.route('/<path:filename>')
+    def serve_static(filename):
+        if filename.endswith('.html'):
+            from flask import send_from_directory
+            return send_from_directory('.', filename)
+    
+    @app.route('/')
+    def index():
+        return '''<html><body><h1>Sabong System</h1>
+        <p><a href="/admin.html">Admin Panel</a></p>
+        <p><a href="/terminal.html">Terminal</a></p>
+        <p><a href="/tv_display.html">TV Display</a></p>
+        <p><a href="/sales_report.html">Reports</a></p>
+        </body></html>'''
+
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
