@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sabong Terminal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; touch-action: manipulation; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .app-title { font-size: 20px; font-weight: bold; }
+        .operator-info { font-size: 14px; opacity: 0.9; }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #1a1a2e;
+            padding: 10px;
+            gap: 10px;
+        }
+        .tab {
+            flex: 1;
+            background: transparent;
+            border: 2px solid #333;
+            color: #888;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .tab.active {
+            background: #e94560;
+            border-color: #e94560;
+            color: white;
+        }
+        
+        .content {
+            padding: 15px;
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .balance-label { font-size: 14px; opacity: 0.7; }
+        .balance-amount {
+            font-size: 42px;
+            font-weight: bold;
+            color: #4caf50;
+            margin: 10px 0;
+        }
+        
+        .fight-list { display: flex; flex-direction: column; gap: 15px; }
+        
+        .fight-card {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid transparent;
+        }
+        .fight-card.selected {
+            border-color: #e94560;
+        }
+        .fight-card.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .fight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .fight-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .fight-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-open { background: #00c853; }
+        .status-last_call { background: #ff9800; }
+        
+        .odds-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .odds-card {
+            flex: 1;
+            background: #252540;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .odds-card.selected {
+            background: #e94560;
+        }
+        .odds-side { font-size: 28px; font-weight: bold; }
+        .odds-value { font-size: 32px; font-weight: bold; color: #ffeb3b; }
+        .odds-label { font-size: 12px; opacity: 0.7; }
+        
+        .amount-input {
+            background: #252540;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .amount-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .amount-btn {
+            background: #252540;
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .amount-btn:active { background: #e94560; }
+        .amount-btn.clear { background: #f44336; }
+        
+        .bet-btn {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .bet-btn:disabled {
+            background: #333;
+            color: #666;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-title { font-size: 24px; margin-bottom: 20px; }
+        .modal-message { font-size: 16px; opacity: 0.7; margin-bottom: 20px; }
+        .modal-btn {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        /* Tickets list */
+        .ticket-list { display: flex; flex-direction: column; gap: 10px; }
+        .ticket-item {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ticket-side {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .ticket-meron { background: #c62828; }
+        .ticket-wala { background: #1565c0; }
+        .ticket-draw { background: #6a1b9a; }
+        
+        /* Scan button */
+        .scan-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #4caf50;
+            border: none;
+            color: white;
+            font-size: 30px;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.5);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div class="modal active" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-title">🏪 SABONG</div>
+            <div class="modal-message">Enter your credentials</div>
+            <input type="text" id="username" placeholder="Username" 
+                   style="width:100%;padding:15px;margin-bottom:10px;border-radius:10px;border:2px solid #333;background:#252540;color:white;font-size:16px;">
+            <input type="password" id="password" placeholder="Password"
+                   style="width:100%;padding:15px;margin-bottom:20px;border-radius:10px;border:2px solid #333;background:#252540;color:white;font-size:16px;">
+            <button class="modal-btn" onclick="login()" style="width:100%">LOGIN</button>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-title">✅ SUCCESS</div>
+            <div class="modal-message" id="successMessage">Bet placed!</div>
+            <button class="modal-btn" onclick="closeModal('successModal')">OK</button>
+        </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-title">❌ ERROR</div>
+            <div class="modal-message" id="errorMessage">Error!</div>
+            <button class="modal-btn" onclick="closeModal('errorModal')">OK</button>
+        </div>
+    </div>
+    
+    <div class="app-header">
+        <div>
+            <div class="app-title">🏪 SABONG</div>
+            <div class="operator-info" id="operatorInfo">Loading...</div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('bet')">BET</div>
+        <div class="tab" onclick="switchTab('tickets')">TICKETS</div>
+        <div class="tab" onclick="switchTab('report')">REPORT</div>
+    </div>
+    
+    <div class="content" id="content">
+        <div class="loading">Loading...</div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + (window.location.port === '5000' || !window.location.port 
+            ? '' : ':' + window.location.port);
+        
+        let token = localStorage.getItem('sabong_token');
+        let operator = null;
+        let currentTab = 'bet';
+        
+        // Current bet state
+        let selectedFight = null;
+        let selectedSide = null;
+        let betAmount = 0;
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const resp = await fetch(API_BASE + '/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            
+            if (!resp.ok) {
+                const err = await resp.json();
+                document.getElementById('errorMessage').textContent = err.error || 'Login failed';
+                document.getElementById('errorModal').classList.add('active');
+                return;
+            }
+            
+            const data = await resp.json();
+            token = data.access_token;
+            operator = data.operator;
+            localStorage.setItem('sabong_token', token);
+            
+            document.getElementById('loginModal').classList.remove('active');
+            updateOperatorInfo();
+            loadContent();
+        }
+        
+        function logout() {
+            token = null;
+            operator = null;
+            localStorage.removeItem('sabong_token');
+            document.getElementById('loginModal').classList.add('active');
+        }
+        
+        function updateOperatorInfo() {
+            if (operator) {
+                document.getElementById('operatorInfo').textContent = 
+                    `₱${operator.credit_balance.toLocaleString()} | ${operator.username}`;
+            }
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadContent();
+        }
+        
+        async function loadContent() {
+            const content = document.getElementById('content');
+            
+            if (currentTab === 'bet') {
+                loadBetTab(content);
+            } else if (currentTab === 'tickets') {
+                loadTicketsTab(content);
+            } else {
+                loadReportTab(content);
+            }
+        }
+        
+        async function loadBetTab(container) {
+            // Balance
+            const balanceHtml = `
+                <div class="balance-card">
+                    <div class="balance-label">CREDIT BALANCE</div>
+                    <div class="balance-amount">₱${(operator?.credit_balance || 0).toLocaleString()}</div>
+                </div>
+            `;
+            
+            // Get fights
+            const resp = await fetch(API_BASE + '/api/fights?limit=10', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const fights = await resp.json();
+            
+            const openFights = fights.filter(f => f.status === 'open' || f.status === 'last_call');
+            
+            const fightCards = openFights.map(f => `
+                <div class="fight-card ${selectedFight === f.id ? 'selected' : ''}" 
+                     onclick="selectFight(${f.id})">
+                    <div class="fight-header">
+                        <div class="fight-number">Fight #${f.fight_number}</div>
+                        <div class="fight-status status-${f.status}">${f.status.toUpperCase()}</div>
+                    </div>
+                    <div class="odds-row">
+                        <div class="odds-card ${selectedSide === 'meron' ? 'selected' : ''}" 
+                             onclick="selectSide('meron', ${f.id})">
+                            <div class="odds-side">🦌</div>
+                            <div class="odds-value">${f.odds_meron.toFixed(2)}</div>
+                            <div class="odds-label">MERON</div>
+                        </div>
+                        <div class="odds-card ${selectedSide === 'wala' ? 'selected' : ''}"
+                             onclick="selectSide('wala', ${f.id})">
+                            <div class="odds-side">🐓</div>
+                            <div class="odds-value">${f.odds_wala.toFixed(2)}</div>
+                            <div class="odds-label">WALA</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            const amountHtml = `
+                <div class="amount-input">
+                    <div class="amount-display">₱${betAmount.toLocaleString()}</div>
+                    <div class="amount-buttons">
+                        <button class="amount-btn" onclick="addAmount(100)">+100</button>
+                        <button class="amount-btn" onclick="addAmount(500)">+500</button>
+                        <button class="amount-btn" onclick="addAmount(1000)">+1K</button>
+                        <button class="amount-btn" onclick="addAmount(5000)">+5K</button>
+                        <button class="amount-btn" onclick="addAmount(10000)">+10K</button>
+                        <button class="amount-btn" onclick="addAmount(50000)">+50K</button>
+                        <button class="amount-btn clear" onclick="addAmount(-betAmount)">CLEAR</button>
+                    </div>
+                    <button class="bet-btn" onclick="placeBet()" 
+                            ${!selectedFight || !selectedSide || betAmount <= 0 ? 'disabled' : ''}>
+                        PLACE BET
+                    </button>
+                </div>
+            `;
+            
+            container.innerHTML = balanceHtml + (fightCards || '<div class="loading">No open fights</div>') + amountHtml;
+        }
+        
+        async function loadTicketsTab(container) {
+            const resp = await fetch(API_BASE + '/api/bets/operator/' + operator.id, {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const bets = await resp.json();
+            
+            const ticketItems = bets.slice(0, 20).map(b => `
+                <div class="ticket-item">
+                    <div>
+                        <div style="font-weight:bold">${b.ticket_number}</div>
+                        <div style="font-size:12px;opacity:0.7">
+                            #${b.fight_id} | ₱${b.amount}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="ticket-side ticket-${b.side}">${b.side.toUpperCase()}</span>
+                        <span style="margin-left:10px;font-weight:bold;
+                                   color:${b.status === 'won' ? '#4caf50' : b.status === 'lost' ? '#f44336' : '#ffeb3b'}">
+                            ${b.payout > 0 ? '₱' + b.payout.toFixed(0) : b.status.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = ticketItems || '<div class="loading">No tickets yet</div>';
+        }
+        
+        async function loadReportTab(container) {
+            const resp = await fetch(API_BASE + '/api/operators/me', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const op = await resp.json();
+            
+            container.innerHTML = `
+                <div class="balance-card">
+                    <div class="balance-label">STATISTICS</div>
+                    <div class="balance-amount" style="font-size:24px">
+                        Total Volume: ₱${op.total_volume.toLocaleString()}<br>
+                        Total Bets: ${op.total_bets_placed}<br>
+                        Total Payouts: ₱${op.total_payouts.toLocaleString()}<br>
+                        Loaded: ₱${op.loaded_total.toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+        
+        window.selectFight = function(fightId) {
+            selectedFight = fightId;
+            selectedSide = null;
+            loadBetTab(document.getElementById('content'));
+        };
+        
+        window.selectSide = function(side, fightId) {
+            selectedFight = fightId;
+            selectedSide = side;
+            loadBetTab(document.getElementById('content'));
+        };
+        
+        window.addAmount = function(amount) {
+            betAmount = Math.max(0, betAmount + amount);
+            document.querySelector('.amount-display').textContent = '₱' + betAmount.toLocaleString();
+        };
+        
+        window.placeBet = async function() {
+            if (!selectedFight || !selectedSide || betAmount <= 0) return;
+            
+            const resp = await fetch(API_BASE + '/api/bets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    fight_id: selectedFight,
+                    amount: betAmount,
+                    side: selectedSide
+                })
+            });
+            
+            if (!resp.ok) {
+                const err = await resp.json();
+                document.getElementById('errorMessage').textContent = err.error || 'Bet failed';
+                document.getElementById('errorModal').classList.add('active');
+                return;
+            }
+            
+            const data = await resp.json();
+            
+            // Update operator balance
+            const meResp = await fetch(API_BASE + '/api/operators/me', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            operator = await meResp.json();
+            updateOperatorInfo();
+            
+            // Show success
+            document.getElementById('successMessage').textContent = 
+                `Bet ${data.bet.ticket_number} placed!\nPotential win: ₱${(betAmount * (selectedSide === 'meron' ? data.odds.meron : data.odds.wala)).toFixed(0)}`;
+            document.getElementById('successModal').classList.add('active');
+            
+            // Reset
+            selectedSide = null;
+            betAmount = 0;
+            loadContent();
+        };
+        
+        // Check login on load
+        if (token) {
+            fetch(API_BASE + '/api/operators/me', {
+                headers: {'Authorization': 'Bearer ' + token}
+            }).then(r => {
+                if (r.ok) r.json().then(o => {
+                    operator = o;
+                    document.getElementById('loginModal').classList.remove('active');
+                    updateOperatorInfo();
+                    loadContent();
+                });
+            });
+        }
+        
+        // Auto-refresh every 5 seconds
+        setInterval(() => {
+            if (operator && currentTab === 'bet') {
+                loadContent();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

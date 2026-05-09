@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabong Anti-Cheat Monitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #d32f2f, #f44336);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .title { font-size: 24px; font-weight: bold; }
+        .status { font-size: 14px; opacity: 0.8; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .stat-card {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label { font-size: 14px; opacity: 0.7; }
+        
+        .stat-today { color: #4caf50; }
+        .stat-operators { color: #2196f3; }
+        .stat-ips { color: #ff9800; }
+        .stat-alerts { color: #f44336; }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .panel {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        .table th {
+            font-weight: 600;
+            opacity: 0.7;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .table tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-low { background: #4caf50; }
+        .badge-medium { background: #ff9800; }
+        .badge-high { background: #f44336; }
+        
+        .config-section {
+            padding: 20px;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #252540;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .config-label { font-size: 14px; }
+        .config-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .config-input {
+            width: 80px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #1a1a2e;
+            color: white;
+            text-align: center;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #2196f3; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-success { background: #4caf50; color: white; }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+        
+        .alert-box {
+            background: #2a1a1a;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 10px 20px;
+            border-radius: 0 8px 8px 0;
+            display: none;
+        }
+        .alert-box.active { display: block; }
+        
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333;
+            border-top-color: #4caf50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="title">🛡️ ANTI-CHEAT MONITOR</div>
+            <div class="status">Real-time surveillance</div>
+        </div>
+        <div class="refresh-indicator">
+            <div class="spinner"></div>
+            <span>Auto-refresh every 3s</span>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Bets Today</div>
+            <div class="stat-value stat-today" id="totalBets">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Amount</div>
+            <div class="stat-value stat-today" id="totalAmount">₱0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Operators</div>
+            <div class="stat-value stat-operators" id="activeOperators">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Suspicious IPs</div>
+            <div class="stat-value stat-ips" id="suspiciousIps">0</div>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="panel">
+            <div class="panel-title">⚠️ Recent Alerts</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>Severity</th>
+                    </tr>
+                </thead>
+                <tbody id="alertsTable">
+                    <tr><td colspan="4" style="text-align:center;opacity:0.5">No recent alerts</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-title">🚫 Blocked Operators</div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Reason</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="blockedTable">
+                    <tr><td colspan="4" style="text-align:center;opacity:0.5">No blocked operators</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="panel" style="margin: 0 20px 20px;">
+        <div class="panel-title">⚙️ Configuration</div>
+        <div class="config-grid">
+            <div class="config-item">
+                <span class="config-label">Max Bets/Min (IP)</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="maxBetsPerMin" value="30">
+                </div>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Max Bets/Min (Operator)</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="maxBetsPerOperator" value="10">
+                </div>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Max ₱/Fight/Operator</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="maxAmountPerFight" value="50000">
+                </div>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Lockout Duration (min)</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="lockoutDuration" value="15">
+                </div>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Alert Amount ₱</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="alertAmount" value="10000">
+                </div>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Suspicious Ratio</span>
+                <div class="config-value">
+                    <input type="number" class="config-input" id="suspiciousRatio" value="3.0" step="0.1">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="actions">
+        <button class="btn btn-success" onclick="refreshData()">🔄 Refresh Now</button>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Save Config</button>
+        <button class="btn btn-danger" onclick="clearBlocked()">⚠️ Release All Blocked</button>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let token = localStorage.getItem('sabong_token');
+        
+        async function checkAuth() {
+            if (!token) {
+                token = prompt('Enter JWT token:');
+                if (token) localStorage.setItem('sabong_token', token);
+            }
+        }
+        
+        async function refreshData() {
+            await checkAuth();
+            
+            // Get stats
+            const statsRes = await fetch(API_BASE + '/api/anticheat/stats', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                document.getElementById('totalBets').textContent = stats.total_bets_today;
+                document.getElementById('totalAmount').textContent = '₱' + stats.total_amount_today.toLocaleString();
+                document.getElementById('activeOperators').textContent = stats.active_operators;
+                document.getElementById('suspiciousIps').textContent = stats.suspicious_ips;
+            }
+            
+            // Get recent audit logs (alerts)
+            const auditRes = await fetch(API_BASE + '/api/audit?limit=20', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (auditRes.ok) {
+                const logs = await auditRes.json();
+                const alerts = logs.filter(l => 
+                    l.action.includes('LIMIT') || 
+                    l.action.includes('ANOMALY') ||
+                    l.action.includes('BLOCKED')
+                );
+                
+                const tbody = document.getElementById('alertsTable');
+                if (alerts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;opacity:0.5">No recent alerts</td></tr>';
+                } else {
+                    tbody.innerHTML = alerts.slice(0, 10).map(a => `
+                        <tr>
+                            <td>${new Date(a.timestamp).toLocaleTimeString()}</td>
+                            <td>${a.action}</td>
+                            <td>${a.details || '-'}</td>
+                            <td><span class="badge badge-${a.severity?.toLowerCase() || 'low'}">${a.severity || 'N/A'}</span></td>
+                        </tr>
+                    `).join('');
+                }
+            }
+            
+            // Get blocked operators
+            const opsRes = await fetch(API_BASE + '/api/operators?limit=100', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            if (opsRes.ok) {
+                const ops = await opsRes.json();
+                // Would need endpoint to get blocked status - simplify for now
+                document.getElementById('blockedTable').innerHTML = 
+                    '<tr><td colspan="4" style="text-align:center;opacity:0.5">Use /api/anticheat/operator/:id to check</td></tr>';
+            }
+        }
+        
+        async function saveConfig() {
+            await checkAuth();
+            
+            const config = {
+                max_bets_per_minute: parseInt(document.getElementById('maxBetsPerMin').value),
+                max_bets_per_operator_per_minute: parseInt(document.getElementById('maxBetsPerOperator').value),
+                max_amount_per_fight_per_operator: parseInt(document.getElementById('maxAmountPerFight').value),
+                lockout_duration_minutes: parseInt(document.getElementById('lockoutDuration').value),
+                alert_threshold_amount: parseInt(document.getElementById('alertAmount').value),
+                suspicious_ratio: parseFloat(document.getElementById('suspiciousRatio').value)
+            };
+            
+            const res = await fetch(API_BASE + '/api/anticheat/config', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(config)
+            });
+            
+            if (res.ok) {
+                alert('Configuration saved!');
+            } else {
+                alert('Failed to save config');
+            }
+        }
+        
+        async function clearBlocked() {
+            if (!confirm('Release all blocked operators?')) return;
+            
+            await checkAuth();
+            // Would need to iterate through blocked - simplified
+            alert('Feature: Release all blocked operators');
+        }
+        
+        refreshData();
+        setInterval(refreshData, 3000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabong TV Display</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.5);
+        }
+        .arena-name { font-size: 32px; font-weight: bold; letter-spacing: 2px; }
+        .clock { font-size: 28px; font-weight: 300; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            height: calc(100vh - 80px);
+        }
+        
+        .fight-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .fight-number {
+            font-size: 18px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .fight-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status-open { background: #00c853; }
+        .status-last_call { background: #ff9800; }
+        .status-closed { background: #f44336; }
+        .status-finished { background: #2196f3; }
+        
+        .versus {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #ffeb3b;
+        }
+        
+        .side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+        }
+        .side-meron {
+            background: linear-gradient(135deg, #c62828, #ef5350);
+        }
+        .side-wala {
+            background: linear-gradient(135deg, #1565c0, #42a5f5);
+        }
+        .side-draw {
+            background: linear-gradient(135deg, #6a1b9a, #ab47bc);
+        }
+        
+        .side-name {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .odds {
+            font-size: 64px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .odds-label {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .pool-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .pool-item { text-align: center; }
+        .pool-label { font-size: 14px; opacity: 0.7; }
+        .pool-value { font-size: 24px; font-weight: bold; color: #4caf50; }
+        
+        .bayong-jackpot {
+            background: linear-gradient(90deg, #ff9800, #ffc107);
+            color: #1a1a2e;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .jackpot-label { font-size: 14px; font-weight: bold; }
+        .jackpot-amount { font-size: 32px; font-weight: bold; }
+        
+        .streak-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .streak {
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+        .streak-meron { background: rgba(198, 40, 40, 0.5); }
+        .streak-wala { background: rgba(21, 101, 192, 0.5); }
+        .streak-number { font-size: 28px; font-weight: bold; }
+        .streak-label { font-size: 12px; opacity: 0.7; }
+        
+        .recent-results {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+        }
+        .result-chip {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        .result-meron { border-left: 4px solid #c62828; }
+        .result-wala { border-left: 4px solid #1565c0; }
+        .result-draw { border-left: 4px solid #6a1b9a; }
+
+        /* Animation for odds updates */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse { animation: pulse 0.5s ease; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="arena-name" id="arenaName">SABONG ARENA</div>
+        <div class="clock" id="clock">00:00:00</div>
+    </div>
+    
+    <div class="main-content" id="fights">
+        <!-- Fight cards will be inserted here -->
+    </div>
+    
+    <div class="recent-results" id="results">
+        <!-- Recent results will be shown here -->
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5001' 
+            : window.location.origin;
+        
+        let lastData = {};
+        
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = 
+                now.toLocaleTimeString('en-PH', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        function formatCurrency(amount) {
+            return '₱' + parseFloat(amount).toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        function createFightCard(fight) {
+            const statusClass = `status-${fight.status.replace('_', '-')}`;
+            const statusText = fight.status.toUpperCase().replace('_', ' ');
+            
+            return `
+                <div class="fight-card">
+                    <div class="fight-number">Fight #${fight.fight_number}</div>
+                    <div class="fight-status ${statusClass}">${statusText}</div>
+                    
+                    <div class="side side-meron">
+                        <div class="side-name">🦌 MERON</div>
+                        <div class="odds" id="odds-meron-${fight.id}">${fight.odds_meron.toFixed(2)}</div>
+                        <div class="odds-label">ODDS</div>
+                    </div>
+                    
+                    <div class="versus">VS</div>
+                    
+                    <div class="side side-wala">
+                        <div class="side-name">🐓 WALA</div>
+                        <div class="odds" id="odds-wala-${fight.id}">${fight.odds_wala.toFixed(2)}</div>
+                        <div class="odds-label">ODDS</div>
+                    </div>
+                    
+                    <div class="pool-info">
+                        <div class="pool-item">
+                            <div class="pool-label">Total Pool</div>
+                            <div class="pool-value">${formatCurrency(fight.total_pool)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bayong-jackpot">
+                        <div class="jackpot-label">BAYONG JACKPOT</div>
+                        <div class="jackpot-amount">${formatCurrency(fight.bayong_amount)}</div>
+                    </div>
+                    
+                    <div class="streak-info">
+                        <div class="streak streak-meron">
+                            <div class="streak-number">${fight.meron_streak}</div>
+                            <div class="streak-label">MERON STREAK</div>
+                        </div>
+                        <div class="streak streak-wala">
+                            <div class="streak-number">${fight.wala_streak}</div>
+                            <div class="streak-label">WALA STREAK</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function createResultChip(result) {
+            const winnerText = result.winner?.toUpperCase() || 'DRAW';
+            const resultClass = `result-${result.winner || 'draw'}`;
+            return `
+                <div class="result-chip ${resultClass}">
+                    #${result.fight_number}: ${winnerText}
+                </div>
+            `;
+        }
+        
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/live/odds`);
+                const fights = await response.json();
+                
+                const fightsContainer = document.getElementById('fights');
+                const newHTML = fights.map(createFightCard).join('');
+                
+                if (fightsContainer.innerHTML !== newHTML) {
+                    fightsContainer.innerHTML = newHTML;
+                }
+                
+                // Update odds with animation
+                fights.forEach(fight => {
+                    const meronOdds = document.getElementById(`odds-meron-${fight.id}`);
+                    const walaOdds = document.getElementById(`odds-wala-${fight.id}`);
+                    if (meronOdds && lastData[fight.id]?.odds_meron !== fight.odds_meron) {
+                        meronOdds.classList.add('pulse');
+                        setTimeout(() => meronOdds.classList.remove('pulse'), 500);
+                    }
+                    if (walaOdds && lastData[fight.id]?.odds_wala !== fight.odds_wala) {
+                        walaOdds.classList.add('pulse');
+                        setTimeout(() => walaOdds.classList.remove('pulse'), 500);
+                    }
+                });
+                
+                lastData = fights.reduce((acc, f) => ({ ...acc, [f.id]: f }), {});
+                
+                // Fetch arena name
+                const arenaRes = await fetch(`${API_BASE}/api/arena`);
+                const arena = await arenaRes.json();
+                document.getElementById('arenaName').textContent = arena.name;
+                
+            } catch (err) {
+                console.error('Error fetching data:', err);
+            }
+        }
+        
+        // Poll every 2 seconds
+        fetchData();
+        setInterval(fetchData, 2000);
+    </script>
+</body>
+</html>

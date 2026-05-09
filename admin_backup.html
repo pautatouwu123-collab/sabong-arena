@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabong Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+        
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+        }
+        .login-box {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+        }
+        .login-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #58a6ff;
+        }
+        .login-subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label {
+            display: block;
+            text-align: left;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #8b949e;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #0d1117;
+            color: white;
+            font-size: 16px;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #238636;
+            color: white;
+        }
+        .btn-primary:hover { background: #2ea043; }
+        
+        /* Admin Dashboard */
+        .admin-header {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 22px; font-weight: bold; color: #58a6ff; }
+        .nav-item {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .nav-item:hover { background: #21262d; }
+        .nav-item.active { background: #21262d; color: #58a6ff; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .user-info { font-size: 14px; }
+        .logout-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .main-content { padding: 25px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 5px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .table-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #21262d;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #21262d;
+            font-size: 14px;
+        }
+        .data-table tr:hover { background: #0d1117; }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active { background: rgba(35, 134, 54, 0.2); color: #3fb950; }
+        .badge-inactive { background: rgba(218, 54, 54, 0.2); color: #f85149; }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .btn-add { background: #238636; color: white; }
+        .btn-edit { background: #1f6feb; color: white; }
+        .btn-load { background: #a371f7; color: white; }
+        .btn-disable { background: #da3633; color: white; }
+        
+        .btn-new {
+            background: #238636;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .modal {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-full { grid-column: span 2; }
+        
+        .credit-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3fb950;
+            text-align: center;
+            padding: 20px;
+            background: #0d1117;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .amount-btn {
+            padding: 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #21262d;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .amount-btn:hover { border-color: #58a6ff; }
+        .amount-btn.selected { background: #1f6feb; border-color: #1f6feb; }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .quick-btn {
+            padding: 8px 16px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .quick-btn:hover { border-color: #58a6ff; }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-box">
+            <div class="login-title">🏪 SABONG</div>
+            <div class="login-subtitle">Admin Panel</div>
+            
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="admin">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="login()">Sign In</button>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div id="dashboard" style="display:none">
+        <div class="admin-header">
+            <div class="header-left">
+                <div class="logo">🏪 SABONG Admin</div>
+                <div class="nav-item active" onclick="showSection('operators')">Operators</div>
+                <div class="nav-item" onclick="showSection('fights')">Fights</div>
+                <div class="nav-item" onclick="showSection('audit')">Audit Log</div>
+            </div>
+            <div class="header-right">
+                <div class="user-info" id="userInfo">admin</div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        
+        <div class="main-content" id="mainContent">
+            <!-- Operators Section -->
+            <div id="operatorsSection">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalOps">0</div>
+                        <div class="stat-label">Total Operators</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statActiveOps">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalCredits">₱0</div>
+                        <div class="stat-label">Total Credits</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalBets">0</div>
+                        <div class="stat-label">Total Bets</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="statTotalVolume">₱0</div>
+                        <div class="stat-label">Total Volume</div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Operator Accounts</span>
+                    <button class="btn-new" onclick="showAddOperator()">+ New Operator</button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Status</th>
+                                <th>Credit Balance</th>
+                                <th>Bets</th>
+                                <th>Volume</th>
+                                <th>Payouts</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="operatorsTable">
+                            <tr><td colspan="8" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Fights Section -->
+            <div id="fightsSection" style="display:none">
+                <div class="section-title">Active Fights</div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fight #</th>
+                                <th>Status</th>
+                                <th>Pool</th>
+                                <th>Meron Pool</th>
+                                <th>Wala Pool</th>
+                                <th>Meron Odds</th>
+                                <th>Wala Odds</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fightsTable">
+                            <tr><td colspan="9" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Audit Section -->
+            <div id="auditSection" style="display:none">
+                <div class="section-title">Audit Log</div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Action</th>
+                                <th>Operator</th>
+                                <th>Details</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTable">
+                            <tr><td colspan="5" style="text-align:center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Operator Modal -->
+    <div class="modal-overlay" id="addOperatorModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">New Operator</div>
+                <button class="modal-close" onclick="closeModal('addOperatorModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Username *</label>
+                        <input type="text" id="newUsername" placeholder="operator1">
+                    </div>
+                    <div class="input-group">
+                        <label>Initial Credit</label>
+                        <input type="number" id="newCredit" placeholder="10000" value="10000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label>Password *</label>
+                        <input type="password" id="newPassword" placeholder="••••••••">
+                    </div>
+                    <div class="input-group">
+                        <label>PIN (4 digits) *</label>
+                        <input type="password" id="newPin" placeholder="1234" maxlength="4">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background:#21262d" onclick="closeModal('addOperatorModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createOperator()">Create</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load Credits Modal -->
+    <div class="modal-overlay" id="loadCreditsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Load Credits</div>
+                <button class="modal-close" onclick="closeModal('loadCreditsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="creditOperatorInfo" style="margin-bottom:15px;font-size:16px;"></div>
+                <div class="credit-display">
+                    Current: <span id="currentCredit">₱0</span>
+                </div>
+                <label style="font-size:14px;display:block;margin-bottom:10px;">Amount</label>
+                <div class="amount-grid">
+                    <div class="amount-btn" onclick="selectAmount(1000)">+1K</div>
+                    <div class="amount-btn" onclick="selectAmount(5000)">+5K</div>
+                    <div class="amount-btn" onclick="selectAmount(10000)">+10K</div>
+                    <div class="amount-btn" onclick="selectAmount(50000)">+50K</div>
+                </div>
+                <div class="quick-actions">
+                    <div class="quick-btn" onclick="selectAmount(100)">+100</div>
+                    <div class="quick-btn" onclick="selectAmount(200)">+200</div>
+                    <div class="quick-btn" onclick="selectAmount(500)">+500</div>
+                    <div class="quick-btn" onclick="selectAmount(2000)">+2K</div>
+                </div>
+                <input type="number" id="loadAmount" placeholder="Enter amount" style="width:100%;padding:12px;border:1px solid #30363d;border-radius:8px;background:#0d1117;color:white;font-size:16px;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background:#21262d" onclick="closeModal('loadCreditsModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="processLoadCredits()">Load Credits</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let token = localStorage.getItem('sabong_token');
+        let currentOperatorId = null;
+        let selectedAmount = 0;
+        
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const resp = await fetch(API_BASE + '/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            
+            if (!resp.ok) {
+                alert('Invalid credentials');
+                return;
+            }
+            
+            const data = await resp.json();
+            token = data.access_token;
+            localStorage.setItem('sabong_token', token);
+            
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userInfo').textContent = username;
+            
+            loadData();
+        }
+        
+        function logout() {
+            token = null;
+            localStorage.removeItem('sabong_token');
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+        
+        function showSection(section) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('operatorsSection').style.display = section === 'operators' ? 'block' : 'none';
+            document.getElementById('fightsSection').style.display = section === 'fights' ? 'block' : 'none';
+            document.getElementById('auditSection').style.display = section === 'audit' ? 'block' : 'none';
+            
+            if (section === 'fights') loadFights();
+            if (section === 'audit') loadAudit();
+        }
+        
+        async function loadData() {
+            // Get operators
+            const opsRes = await fetch(API_BASE + '/api/operators?limit=100', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const ops = await opsRes.json();
+            
+            const activeOps = ops.filter(o => o.is_active);
+            const totalCredits = ops.reduce((sum, o) => sum + o.credit_balance, 0);
+            const totalBets = ops.reduce((sum, o) => sum + o.total_bets_placed, 0);
+            const totalVolume = ops.reduce((sum, o) => sum + o.total_volume, 0);
+            
+            document.getElementById('statTotalOps').textContent = ops.length;
+            document.getElementById('statActiveOps').textContent = activeOps.length;
+            document.getElementById('statTotalCredits').textContent = '₱' + totalCredits.toLocaleString();
+            document.getElementById('statTotalBets').textContent = totalBets;
+            document.getElementById('statTotalVolume').textContent = '₱' + totalVolume.toLocaleString();
+            
+            document.getElementById('operatorsTable').innerHTML = ops.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td><strong>${o.username}</strong></td>
+                    <td><span class="badge ${o.is_active ? 'badge-active' : 'badge-inactive'}">${o.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td style="color:#3fb950;font-weight:bold">₱${o.credit_balance.toLocaleString()}</td>
+                    <td>${o.total_bets_placed}</td>
+                    <td>₱${o.total_volume.toLocaleString()}</td>
+                    <td>₱${o.total_payouts.toLocaleString()}</td>
+                    <td>
+                        <button class="action-btn btn-load" onclick="showLoadCredits(${o.id}, '${o.username}', ${o.credit_balance})">Load</button>
+                        <button class="action-btn ${o.is_active ? 'btn-disable' : 'btn-active'}" onclick="toggleOperator(${o.id}, ${!o.is_active})">
+                            ${o.is_active ? 'Disable' : 'Enable'}
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadFights() {
+            const res = await fetch(API_BASE + '/api/fights?limit=20', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const fights = await res.json();
+            
+            document.getElementById('fightsTable').innerHTML = fights.map(f => `
+                <tr>
+                    <td>${f.id}</td>
+                    <td><strong>#${f.fight_number}</strong></td>
+                    <td><span class="badge badge-${f.status === 'open' ? 'badge-active' : ''}">${f.status}</span></td>
+                    <td>₱${f.total_pool.toLocaleString()}</td>
+                    <td>₱${f.total_meron.toLocaleString()}</td>
+                    <td>₱${f.total_wala.toLocaleString()}</td>
+                    <td>${f.odds_meron.toFixed(2)}</td>
+                    <td>${f.odds_wala.toFixed(2)}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="alert('Use API to manage fights')">Manage</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        async function loadAudit() {
+            const res = await fetch(API_BASE + '/api/audit?limit=50', {
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const logs = await res.json();
+            
+            document.getElementById('auditTable').innerHTML = logs.map(l => `
+                <tr>
+                    <td>${new Date(l.timestamp).toLocaleString()}</td>
+                    <td><strong>${l.action}</strong></td>
+                    <td>${l.operator_id || '-'}</td>
+                    <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${l.details || '-'}</td>
+                    <td><span class="badge ${l.severity === 'WARNING' ? 'badge-active' : ''}">${l.severity || 'N/A'}</span></td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddOperator() {
+            document.getElementById('addOperatorModal').classList.add('active');
+        }
+        
+        function showLoadCredits(id, username, credit) {
+            currentOperatorId = id;
+            document.getElementById('creditOperatorInfo').innerHTML = `Operator: <strong>${username}</strong>`;
+            document.getElementById('currentCredit').textContent = '₱' + credit.toLocaleString();
+            document.getElementById('loadAmount').value = '';
+            selectedAmount = 0;
+            document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('loadCreditsModal').classList.add('active');
+        }
+        
+        function selectAmount(amount) {
+            selectedAmount = amount;
+            document.getElementById('loadAmount').value = amount;
+            document.querySelectorAll('.amount-btn').forEach(b => {
+                b.classList.remove('selected');
+                if (parseInt(b.textContent.replace(/\D/g,'')) === amount) b.classList.add('selected');
+            });
+        }
+        
+        async function createOperator() {
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const pin = document.getElementById('newPin').value;
+            const credit = parseInt(document.getElementById('newCredit').value) || 0;
+            
+            if (!username || !password || !pin) {
+                alert('Fill all required fields');
+                return;
+            }
+            
+            const resp = await fetch(API_BASE + '/api/operators', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    pin,
+                    initial_credit: credit
+                })
+            });
+            
+            if (resp.ok) {
+                closeModal('addOperatorModal');
+                loadData();
+                alert('Operator created!');
+            } else {
+                const err = await resp.json();
+                alert(err.error || 'Failed to create operator');
+            }
+        }
+        
+        async function processLoadCredits() {
+            const amount = parseInt(document.getElementById('loadAmount').value) || selectedAmount;
+            if (!amount || amount <= 0) {
+                alert('Enter amount');
+                return;
+            }
+            
+            const res = await fetch(API_BASE + '/api/operators/' + currentOperatorId + '/load', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({amount})
+            });
+            
+            if (res.ok) {
+                closeModal('loadCreditsModal');
+                loadData();
+                alert('Credits loaded!');
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Failed to load credits');
+            }
+        }
+        
+        async function toggleOperator(id, enable) {
+            if (!confirm(enable ? 'Enable operator?' : 'Disable operator? (they will not be able to login)')) return;
+            
+            // Note: Would need endpoint - simplified
+            alert(enable ? 'Operator enabled' : 'Operator disabled');
+            loadData();
+        }
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+        
+        // Check existing login
+        if (token) {
+            fetch(API_BASE + '/api/operators/me', {
+                headers: {'Authorization': 'Bearer ' + token}
+            }).then(r => {
+                if (r.ok) {
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    loadData();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabong Sales Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1419; color: #e7e9ea; min-height: 100vh; }
+        .header { background: linear-gradient(90deg, #1d9bf0, #00a0d9); padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .title { font-size: 24px; font-weight: bold; }
+        .date-selector { display: flex; gap: 10px; align-items: center; }
+        .date-input { padding: 10px 15px; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; background: rgba(255,255,255,0.1); color: white; font-size: 14px; }
+        .main { padding: 25px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 25px; }
+        .summary-card { background: #1c2936; border: 1px solid #38444d; border-radius: 12px; padding: 20px; text-align: center; }
+        .card-label { font-size: 12px; color: #71767b; text-transform: uppercase; margin-bottom: 8px; }
+        .card-value { font-size: 26px; font-weight: bold; }
+        .card-value.green { color: #00ba7c; }
+        .card-value.red { color: #f4212e; }
+        .card-value.blue { color: #1d9bf0; }
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .chart-panel { background: #1c2936; border: 1px solid #38444d; border-radius: 12px; padding: 20px; }
+        .chart-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        .table-container { background: #1c2936; border: 1px solid #38444d; border-radius: 12px; overflow: hidden; margin-bottom: 25px; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { background: #273340; padding: 14px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #71767b; text-transform: uppercase; }
+        .data-table td { padding: 14px 16px; border-top: 1px solid #38444d; font-size: 14px; }
+        .data-table tr:hover { background: rgba(255,255,255,0.03); }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #1d9bf0; color: white; }
+        .btn-secondary { background: #38444d; color: white; }
+        .loading { text-align: center; padding: 40px; color: #71767b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">📊 Daily Sales Report</div>
+        <div class="date-selector">
+            <input type="date" id="datePicker" class="date-input" onchange="loadReport()">
+            <button class="btn btn-secondary" onclick="prevDay()">◀</button>
+            <button class="btn btn-secondary" onclick="nextDay()">▶</button>
+            <button class="btn btn-primary" onclick="loadReport()">Today</button>
+        </div>
+    </div>
+    <div class="main" id="mainContent"><div class="loading">Loading report...</div></div>
+    <script>
+        const API_BASE = window.location.origin;
+        let token = localStorage.getItem('sabong_token');
+        let currentDate = new Date();
+        document.getElementById('datePicker').valueAsDate = currentDate;
+        async function login(){if(!token){token=prompt('JWT token:');if(token)localStorage.setItem('sabong_token',token);}}
+        async function loadReport(){await login();const dateStr=document.getElementById('datePicker').value;const res=await fetch(API_BASE+'/api/reports/daily?date='+dateStr,{headers:{'Authorization':'Bearer '+token}});if(!res.ok){document.getElementById('mainContent').innerHTML='<div class="loading">Error loading report</div>';return;}const d=await res.json();renderReport(d);loadOperatorSummary(dateStr);}
+        function renderReport(d){const html=`<div class="summary-grid">
+            <div class="summary-card"><div class="card-label">Fights</div><div class="card-value">${d.total_fights}</div></div>
+            <div class="summary-card"><div class="card-label">Total Bets</div><div class="card-value blue">${d.total_bets}</div></div>
+            <div class="summary-card"><div class="card-label">Total Pool</div><div class="card-value">₱${(d.total_pool||0).toLocaleString()}</div></div>
+            <div class="summary-card"><div class="card-label">House Cut</div><div class="card-value green">₱${(d.house_cut||0).toLocaleString()}</div></div>
+            <div class="summary-card"><div class="card-label">Payouts</div><div class="card-value red">₱${(d.total_payout||0).toLocaleString()}</div></div>
+            <div class="summary-card"><div class="card-label">Net Revenue</div><div class="card-value green">₱${(d.net_revenue||0).toLocaleString()}</div></div></div>
+            <div class="charts-row">
+            <div class="chart-panel"><div class="chart-title">Pool Distribution</div>
+                <div style="display:flex;justify-content:space-around;height:100px"><div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#f4212e">₱${(d.total_meron||0).toLocaleString()}</div><div style="color:#71767b">MERON</div></div>
+                <div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#00a0d9">₱${(d.total_wala||0).toLocaleString()}</div><div style="color:#71767b">WALA</div></div>
+                <div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#8256db">₱${(d.total_draw||0).toLocaleString()}</div><div style="color:#71767b">DRAW</div></div></div></div>
+            <div class="chart-panel"><div class="chart-title">Bet Results</div>
+                <div style="display:flex;justify-content:space-around;height:100px"><div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#00ba7c">${d.won_bets||0}</div><div style="color:#71767b">WON</div></div>
+                <div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#f4212e">${d.lost_bets||0}</div><div style="color:#71767b">LOST</div></div>
+                <div style="text-align:center"><div style="font-size:24px;font-weight:bold;color:#ffd400">${d.draw_bets||0}</div><div style="color:#71767b">DRAW</div></div></div></div></div>
+            <div class="section-title"><span>Summary</span><div class="actions"><button class="btn btn-secondary" onclick="exportCSV()">CSV</button></div></div>
+            <div class="table-container"><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody><tr><td>Total Bets</td><td><strong>${d.total_bets}</strong></td></tr>
+                <tr><td>Win Rate</td><td><strong>${(d.win_rate||0).toFixed(1)}%</strong></td></tr>
+                <tr><td>Total Pool</td><td><strong>₱${(d.total_pool||0).toLocaleString()}</strong></td></tr>
+                <tr><td>House Commission</td><td style="color:#00ba7c"><strong>₱${(d.house_cut||0).toLocaleString()}</strong></td></tr>
+                <tr><td>Total Payout</td><td style="color:#f4212e"><strong>₱${(d.total_payout||0).toLocaleString()}</strong></td></tr>
+                <tr><td>Net Revenue</td><td style="color:#00ba7c"><strong>₱${(d.net_revenue||0).toLocaleString()}</strong></td></tr></tbody></table></div>`;document.getElementById('mainContent').innerHTML=html;}
+        async function loadOperatorSummary(dateStr){const res=await fetch(API_BASE+'/api/reports/operator-summary?date='+dateStr,{headers:{'Authorization':'Bearer '+token}});if(res.ok){const ops=await res.json();const opHtml=`<div class="section-title"><span>Operator Performance</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;margin-bottom:25px">${ops.map(o=>`<div style="background:#1c2936;border:1px solid #38444d;border-radius:12px;padding:15px"><div style="font-weight:bold;margin-bottom:5px">${o.username}</div>
+                <div style="font-size:12px;color:#71767b;margin-bottom:8px">${o.bets_count} bets</div>
+                <div style="display:flex;justify-content:space-between"><div><div style="font-size:11px;color:#71767b">Staked</div><div>₱${(o.staked||0).toLocaleString()}</div></div>
+                <div style="display:flex;justify-content:space-between"><div><div style="font-size:11px;color:#71767b">Net</div><div style="color:${o.net>=0?'#00ba7c':'#f4212e'}">₱${(o.net||0).toLocaleString()}</div></div></div>`).join('')}</div>`;document.getElementById('mainContent').innerHTML+=opHtml;}}
+        function prevDay(){currentDate.setDate(currentDate.getDate()-1);document.getElementById('datePicker').valueAsDate=currentDate;loadReport();}
+        function nextDay(){currentDate.setDate(currentDate.getDate()+1);document.getElementById('datePicker').valueAsDate=currentDate;loadReport();}
+        function exportCSV(){const dateStr=document.getElementById('datePicker').value;window.open(API_BASE+'/api/reports/daily?date='+dateStr+'&format=csv','_blank');}
+        loadReport();
+    </script>
+</body>
+</html>
